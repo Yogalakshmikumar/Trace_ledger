@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Register Specimen — TraceLedger{% endblock %}
+{% block page_heading %}Specimen Registration{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">New Specimen Intake</h4>
+            <p class="text-muted text-xs mb-0">Initiates the cryptographic chain of custody with a Genesis Audit Block</p>
+        </div>
+        <a href="{{ url_for('samples') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Registry
+        </a>
+    </div>
+
+    <div class="card border rounded shadow-sm">
+        <div class="card-header bg-navy text-white py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle-fill text-primary-light"></i>
+                <h6 class="mb-0 fw-semibold text-white">Specimen Registration & Genesis Ledger Block Creation</h6>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('register_sample') }}">
+                <div class="row g-3">
+                    <!-- Sample Code -->
+                    <div class="col-md-6">
+                        <label for="sample_code" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Sample Code <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light font-monospace text-muted">ID</span>
+                            <input type="text" class="form-control font-monospace text-uppercase" id="sample_code" name="sample_code" placeholder="e.g. SMP-2026-0006" required>
+                        </div>
+                        <div class="form-text text-xs">Must be unique across the entire database.</div>
+                    </div>
+
+                    <!-- Sample Type -->
+                    <div class="col-md-6">
+                        <label for="sample_type" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Specimen Category / Type <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="sample_type" name="sample_type" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="Potable Water Specimen">Potable Water Specimen</option>
+                            <option value="Industrial Effluent Discharge">Industrial Effluent Discharge</option>
+                            <option value="Agricultural Soil Core">Agricultural Soil Core</option>
+                            <option value="Airborne Particulate Filter">Airborne Particulate Filter</option>
+                            <option value="Bio-Clinical Serum Specimen">Bio-Clinical Serum Specimen</option>
+                            <option value="Groundwater Aquifer Sample">Groundwater Aquifer Sample</option>
+                            <option value="Petrochemical Residue">Petrochemical Residue</option>
+                        </select>
+                    </div>
+
+                    <!-- Source Name -->
+                    <div class="col-md-6">
+                        <label for="source_name" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Source / Origin Location <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="source_name" name="source_name" placeholder="e.g. Municipal Reservoir Gate 4, Outfall #12" required>
+                    </div>
+
+                    <!-- Initial Checkpoint Node -->
+                    <div class="col-md-6">
+                        <label for="initial_node_id" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Initial Intake Node <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="initial_node_id" name="initial_node_id" required>
+                            <option value="">-- Select Intake Checkpoint --</option>
+                            {% for n in nodes %}
+                            <option value="{{ n.node_id }}">
+                                {{ n.node_code }} — {{ n.node_name }} ({{ n.location }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label for="description" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Sample Description & Physical Parameters
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="2" placeholder="e.g. 500mL sterile fluoropolymer bottle; amber container; preliminary temperature 4.1°C..."></textarea>
+                    </div>
+
+                    <!-- Remarks for Genesis Ledger -->
+                    <div class="col-12">
+                        <label for="remarks" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Genesis Ledger Entry Remarks
+                        </label>
+                        <input type="text" class="form-control" id="remarks" name="remarks" value="Sample registered at collection point with tamper seal">
+                        <div class="form-text text-xs">Included canonically in the initial SHA-256 hash calculation.</div>
+                    </div>
+                </div>
+
+                <div class="dbms-concept-callout mt-4 p-3 bg-light rounded border">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-database-fill-gear fs-5 text-primary mt-1"></i>
+                        <div class="text-xs">
+                            <strong class="text-dark">PL/pgSQL Transaction Notice:</strong>
+                            Submitting this form executes the stored procedure <code>register_sample(...)</code>.
+                            It atomically verifies unique constraints, writes the specimen record with status <code>REGISTERED</code>,
+                            calculates the deterministic SHA-256 genesis signature against 64 zero bytes, and commits Block #1 to <code>sample_audit_ledger</code>.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                    <a href="{{ url_for('samples') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4">
+                        <i class="bi bi-shield-check me-1"></i> Commit Registration & Genesis Block
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

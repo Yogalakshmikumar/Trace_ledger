@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sample.sample_code }} — TraceLedger{% endblock %}
+{% block page_heading %}Specimen Tracking & Audit Trail{% endblock %}
+
+{% block content %}
+<div class="sample-details-container">
+    <!-- Header with Back & Action Buttons -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ url_for('samples') }}" class="btn btn-outline-secondary btn-sm" title="Back to Registry">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <h4 class="fw-bold font-monospace text-dark mb-0">{{ sample.sample_code }}</h4>
+                    <span class="badge status-badge status-{{ sample.current_status|lower }}">
+                        {{ sample.current_status }}
+                    </span>
+                    {% if verification and verification.chain_valid %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle text-xs">
+                        <i class="bi bi-shield-check me-1"></i> Chain Verified
+                    </span>
+                    {% else %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle text-xs">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Chain Error
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="text-muted text-xs mt-1">
+                    {{ sample.sample_type }} · Origin: {{ sample.source_name }}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            {% if current_user.role in ['ADMIN', 'FIELD_TECHNICIAN', 'TRANSPORTER', 'LAB_ANALYST'] and sample.current_status != 'DISPOSED' %}
+            <a href="{{ url_for('move_sample', code=sample.sample_code) }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="bi bi-arrow-left-right me-1"></i> Transition / Move Specimen
+            </a>
+            {% endif %}
+            <a href="{{ url_for('integrity') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-patch-check me-1"></i> Verify System Chain
+            </a>
+        </div>
+    </div>
+
+    <!-- Metadata Overview Card -->
+    <div class="card border rounded shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="fw-bold text-dark mb-0">Specimen Custody Invariants</h6>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Sample Code</span>
+                    <span class="font-monospace fw-bold text-dark">{{ sample.sample_code }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Specimen Type</span>
+                    <span class="fw-medium text-dark">{{ sample.sample_type }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Origin / Source</span>
+                    <span class="fw-medium text-dark">{{ sample.source_name }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Current Status</span>
+                    <span class="badge status-badge status-{{ sample.current_status|lower }}">
+                        {{ sample.current_status }}
+                    </span>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Current Checkpoint</span>
+                    <span class="fw-medium text-dark">{{ sample.current_node_name }}</span>
+                    <span class="text-muted text-xs d-block">{{ sample.current_node_location }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Intake Agent</span>
+                    <span class="fw-medium text-dark">{{ sample.registered_by_full_name }}</span>
+                    <span class="text-muted text-xs d-block">@{{ sample.registered_by_username }}</span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Initial Registration</span>
+                    <span class="font-monospace text-xs text-muted tabular-nums">
+                        {{ sample.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') if sample.created_at else '-' }}
+                    </span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Last State Transition</span>
+                    <span class="font-monospace text-xs text-muted tabular-nums">
+                        {{ sample.updated_at.strftime('%Y-%m-%d %H:%M:%S UTC') if sample.updated_at else '-' }}
+                    </span>
+                </div>
+
+                {% if sample.description %}
+                <div class="col-12 mt-2 pt-2 border-top">
+                    <span class="text-xs text-muted text-uppercase fw-semibold d-block">Description & Sealed Physical Packaging</span>
+                    <p class="text-dark text-xs mb-0">{{ sample.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Lifecycle Stage Indicator -->
+    <div class="card border rounded shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="fw-bold text-dark mb-0">Lifecycle State Machine Progression</h6>
+        </div>
+        <div class="card-body p-4">
+            <div class="lifecycle-steps-wrapper d-flex flex-wrap align-items-center justify-content-between gap-2">
+                {% set stages = ['REGISTERED', 'COLLECTED', 'IN_TRANSIT', 'RECEIVED', 'UNDER_TESTING', 'TEST_COMPLETED', 'STORED', 'DISPOSED'] %}
+                {% set stage_order = {'REGISTERED': 1, 'COLLECTED': 2, 'IN_TRANSIT': 3, 'RECEIVED': 4, 'UNDER_TESTING': 5, 'TEST_COMPLETED': 6, 'STORED': 7, 'DISPOSED': 8} %}
+                {% set current_idx = stage_order[sample.current_status] %}
+
+                {% for st in stages %}
+                    {% set st_idx = stage_order[st] %}
+                    <div class="lifecycle-step-item d-flex align-items-center gap-2">
+                        <div class="step-circle {% if st_idx < current_idx %}step-completed{% elif st_idx == current_idx %}step-current{% else %}step-future{% endif %}">
+                            {% if st_idx < current_idx %}
+                                <i class="bi bi-check-lg"></i>
+                            {% else %}
+                                {{ st_idx }}
+                            {% endif %}
+                        </div>
+                        <div class="step-label-group">
+                            <span class="step-title {% if st_idx == current_idx %}fw-bold text-dark{% else %}text-muted{% endif %} text-xs font-monospace">
+                                {{ st }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if not loop.last %}
+                    <div class="step-connector flex-grow-1 {% if st_idx < current_idx %}connector-active{% endif %} d-none d-lg-block"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Cryptographic Hash-Linked Audit Timeline -->
+    <div class="card border rounded shadow-sm mb-4">
+        <div class="card-header bg-navy text-white py-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold mb-0 text-white">Cryptographic Audit Ledger Chain</h6>
+                <span class="text-white-50 text-xs">Append-only blocks protected by PostgreSQL immutability triggers</span>
+            </div>
+            <span class="badge bg-light text-dark font-monospace">
+                Total Blocks: {{ history|length }}
+            </span>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="timeline-trail">
+                {% for block in history %}
+                <div class="timeline-block-card mb-4 p-3 border rounded bg-white shadow-sm position-relative">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-2 mb-2 border-bottom gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-dark font-monospace">Block #{{ block.ledger_id }}</span>
+                            <span class="fw-bold text-dark text-sm">{{ block.action_type }}</span>
+                            {% if block.previous_ledger_id %}
+                            <span class="text-xs text-muted">
+                                <i class="bi bi-link-45deg"></i> Linked to Block #{{ block.previous_ledger_id }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-primary text-xs">GENESIS BLOCK</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-xs text-muted font-monospace tabular-nums">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ block.event_timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if block.event_timestamp else '-' }}
+                        </div>
+                    </div>
+
+                    <div class="row g-2 text-xs mb-3">
+                        <div class="col-md-3">
+                            <span class="text-muted d-block">Transition</span>
+                            <div class="d-flex align-items-center gap-1 font-monospace mt-1">
+                                <span class="badge bg-light text-secondary border">{{ block.old_status or 'GENESIS' }}</span>
+                                <i class="bi bi-arrow-right text-muted"></i>
+                                <span class="badge status-badge status-{{ block.new_status|lower }}">{{ block.new_status }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <span class="text-muted d-block">Location Transfer</span>
+                            <div class="fw-semibold text-dark mt-1">
+                                {{ block.from_node_name }}
+                                <i class="bi bi-arrow-right text-muted mx-1"></i>
+                                {{ block.to_node_name }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <span class="text-muted d-block">Custody Operator</span>
+                            <div class="fw-semibold text-dark mt-1">
+                                {{ block.performed_by_name }}
+                                <span class="badge user-role-badge role-{{ block.performed_by_role|lower }} ms-1">
+                                    {{ block.performed_by_role }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if block.remarks %}
+                    <div class="p-2 mb-3 bg-light rounded text-xs text-dark border">
+                        <span class="fw-semibold text-secondary">Remarks:</span> {{ block.remarks }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Cryptographic Hash Verification Box -->
+                    <div class="hash-chain-box p-2 bg-light-subtle rounded border font-monospace text-xs">
+                        <div class="row g-2">
+                            <div class="col-12 col-lg-6">
+                                <span class="text-muted d-block text-xxs text-uppercase">Previous Hash (Predecessor Invariant)</span>
+                                <div class="hash-text-string text-truncate text-secondary" title="{{ block.previous_hash }}">
+                                    <code>{{ block.previous_hash }}</code>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6">
+                                <span class="text-muted d-block text-xxs text-uppercase">Block Record Hash (SHA-256 Digest)</span>
+                                <div class="hash-text-string text-truncate text-primary fw-semibold" title="{{ block.record_hash }}">
+                                    <code>{{ block.record_hash }}</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

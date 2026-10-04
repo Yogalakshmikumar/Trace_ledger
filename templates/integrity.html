@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Integrity Verifier — TraceLedger{% endblock %}
+{% block page_heading %}Chain Integrity Verification{% endblock %}
+
+{% block content %}
+<div class="integrity-container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Cryptographic Chain Verification Engine</h4>
+            <p class="text-muted text-xs mb-0">Re-computes deterministic SHA-256 hashes & validates structural pointers across all ledger blocks</p>
+        </div>
+        <div>
+            <a href="{{ url_for('integrity') }}" class="btn btn-primary btn-sm shadow-sm">
+                <i class="bi bi-arrow-repeat me-1"></i> Re-Run Verification
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Verification Status Hero Banner -->
+    <div class="integrity-hero-card mb-4 p-4 rounded text-center border shadow-sm {% if is_all_valid %}bg-success-subtle border-success{% else %}bg-danger-subtle border-danger{% endif %}">
+        {% if is_all_valid %}
+            <div class="integrity-icon mb-2">
+                <i class="bi bi-shield-fill-check fs-1 text-success"></i>
+            </div>
+            <h2 class="fw-bold text-success mb-1 tracking-tight">✓ LEDGER INTEGRITY VERIFIED</h2>
+            <p class="text-success-emphasis text-sm mb-0">
+                All cryptographic invariants, predecessor pointers, and SHA-256 signatures are intact and untampered.
+            </p>
+        {% else %}
+            <div class="integrity-icon mb-2">
+                <i class="bi bi-shield-fill-exclamation fs-1 text-danger"></i>
+            </div>
+            <h2 class="fw-bold text-danger mb-1 tracking-tight">⚠ INTEGRITY VIOLATION DETECTED</h2>
+            <p class="text-danger-emphasis text-sm mb-0">
+                Cryptographic signature mismatch or broken predecessor linkage discovered in the audit chain!
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Verification Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border rounded p-3 bg-white shadow-sm text-center">
+                <span class="text-xs text-muted text-uppercase fw-semibold">Samples Audited</span>
+                <div class="font-monospace fs-3 fw-bold text-dark mt-1 tabular-nums">{{ total_samples }}</div>
+                <span class="text-muted text-xxs">Discrete specimens</span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border rounded p-3 bg-white shadow-sm text-center">
+                <span class="text-xs text-muted text-uppercase fw-semibold">Ledger Blocks Checked</span>
+                <div class="font-monospace fs-3 fw-bold text-dark mt-1 tabular-nums">{{ total_ledger_records }}</div>
+                <span class="text-muted text-xxs">SHA-256 blocks evaluated</span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border rounded p-3 bg-white shadow-sm text-center">
+                <span class="text-xs text-muted text-uppercase fw-semibold">Valid Chains</span>
+                <div class="font-monospace fs-3 fw-bold text-success mt-1 tabular-nums">{{ valid_chains }}</div>
+                <span class="text-muted text-xxs">100% mathematical integrity</span>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border rounded p-3 bg-white shadow-sm text-center">
+                <span class="text-xs text-muted text-uppercase fw-semibold">Broken Chains</span>
+                <div class="font-monospace fs-3 fw-bold {% if broken_chains > 0 %}text-danger{% else %}text-muted{% endif %} mt-1 tabular-nums">{{ broken_chains }}</div>
+                <span class="text-muted text-xxs">Tampered / inconsistent</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Audit Rules Checklist -->
+    <div class="card border rounded shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="fw-bold text-dark mb-0">Cryptographic Rules Enforced by <code>verify_sample_chain()</code></h6>
+        </div>
+        <div class="card-body p-4 text-xs">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                        <div>
+                            <strong>1. Genesis Invariant:</strong>
+                            Block #1 of each sample must have <code>previous_ledger_id = NULL</code> and <code>previous_hash = 64 zero bytes</code>.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                        <div>
+                            <strong>2. Pointer Continuity:</strong>
+                            Every block $N$ ($N > 1$) must point to block $N-1$'s <code>ledger_id</code> with zero missing sequence steps.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                        <div>
+                            <strong>3. Hash Chain Linkage:</strong>
+                            Block $N$'s <code>previous_hash</code> must strictly match the stored <code>record_hash</code> of block $N-1$.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                        <div>
+                            <strong>4. Signature Determinism:</strong>
+                            The SHA-256 digest re-computed on canonical payload fields must equal the stored <code>record_hash</code>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Specimen Chain Audit Table -->
+    <div class="card border rounded shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="fw-bold text-dark mb-0">Specimen Chain Verification Matrix</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-sm">
+                <thead class="table-light text-xs text-muted text-uppercase font-monospace">
+                    <tr>
+                        <th>Sample Code</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Blocks</th>
+                        <th>Integrity Result</th>
+                        <th>Anomaly / Ledger ID</th>
+                        <th>Diagnostic Details</th>
+                        <th class="text-end">Inspect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in results %}
+                    <tr>
+                        <td class="font-monospace fw-bold">
+                            <a href="{{ url_for('sample_details', sample_code=res.sample_code) }}" class="text-dark text-decoration-none">
+                                {{ res.sample_code }}
+                            </a>
+                        </td>
+                        <td>{{ res.sample_type }}</td>
+                        <td>
+                            <span class="badge status-badge status-{{ res.current_status|lower }}">
+                                {{ res.current_status }}
+                            </span>
+                        </td>
+                        <td class="font-monospace tabular-nums">{{ res.total_records }}</td>
+                        <td>
+                            {% if res.chain_valid %}
+                            <span class="badge bg-success font-monospace">
+                                <i class="bi bi-check-lg me-1"></i> INTACT
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger font-monospace">
+                                <i class="bi bi-exclamation-triangle me-1"></i> BROKEN
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="font-monospace text-xs">
+                            {% if res.broken_at_ledger_id %}
+                            <span class="text-danger fw-bold">Block #{{ res.broken_at_ledger_id }}</span>
+                            {% else %}
+                            <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-xs text-muted" style="max-width: 250px;">
+                            {{ res.failure_reason }}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sample_details', sample_code=res.sample_code) }}" class="btn btn-outline-secondary btn-xs">
+                                Timeline
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No specimen chains found in database.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

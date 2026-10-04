@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Ledger — TraceLedger{% endblock %}
+{% block page_heading %}Append-Only Audit Ledger{% endblock %}
+
+{% block content %}
+<div class="audit-ledger-container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Cryptographic Audit Ledger</h4>
+            <p class="text-muted text-xs mb-0">Append-only, hash-linked relational dataset enforcing PostgreSQL-level immutability</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('integrity') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-shield-check me-1"></i> Verify All Chains
+            </a>
+        </div>
+    </div>
+
+    <!-- Immutability Security Banner -->
+    <div class="alert alert-info border shadow-sm mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-lock-fill fs-5 text-primary"></i>
+            <div class="text-xs">
+                <strong>Database Immutability Invariant:</strong>
+                All records below reside in <code>sample_audit_ledger</code>.
+                Any <code>UPDATE</code> or <code>DELETE</code> command executed by any user or administrator is intercepted and aborted by the PL/pgSQL trigger <code>prevent_ledger_modification()</code>.
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card border rounded shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('audit_ledger') }}" class="row g-2 align-items-center">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" value="{{ search_query }}" class="form-control font-monospace" placeholder="Search by Sample Code, Action Type, or SHA-256 Hash...">
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark w-100">Search</button>
+                    {% if search_query %}
+                    <a href="{{ url_for('audit_ledger') }}" class="btn btn-outline-secondary" title="Clear Search"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="card border rounded shadow-sm">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold text-dark mb-0">Audit Ledger Blocks</h6>
+                <span class="text-muted text-xs">Total records: {{ records|length }}</span>
+            </div>
+            <span class="badge bg-light text-dark border font-monospace text-xs">
+                SHA-256 Hash Linked
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-xs">
+                <thead class="table-light text-muted text-uppercase font-monospace">
+                    <tr>
+                        <th>Block #</th>
+                        <th>Sample Code</th>
+                        <th>Prev Block</th>
+                        <th>Action Type</th>
+                        <th>State Transition</th>
+                        <th>Transfer Nodes</th>
+                        <th>Operator</th>
+                        <th>Timestamp (UTC)</th>
+                        <th>Previous Hash</th>
+                        <th>Record Hash</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td class="font-monospace fw-bold text-dark">#{{ r.ledger_id }}</td>
+                        <td class="font-monospace fw-semibold">
+                            <a href="{{ url_for('sample_details', sample_code=r.sample_code) }}" class="text-dark text-decoration-none">
+                                {{ r.sample_code }}
+                            </a>
+                        </td>
+                        <td class="font-monospace text-muted">
+                            {% if r.previous_ledger_id %}
+                                #{{ r.previous_ledger_id }}
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">GENESIS</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-dark">{{ r.action_type }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-1 font-monospace">
+                                <span class="text-muted">{{ r.old_status or '—' }}</span>
+                                <i class="bi bi-arrow-right text-muted"></i>
+                                <span class="badge status-badge status-{{ r.new_status|lower }}">{{ r.new_status }}</span>
+                            </div>
+                        </td>
+                        <td class="text-truncate" style="max-width: 160px;" title="{{ r.from_node }} → {{ r.to_node }}">
+                            {{ r.from_node }} → {{ r.to_node }}
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ r.performed_by }}</div>
+                            <span class="badge user-role-badge role-{{ r.role|lower }}">{{ r.role }}</span>
+                        </td>
+                        <td class="font-monospace text-muted tabular-nums">
+                            {{ r.event_timestamp.strftime('%Y-%m-%d %H:%M:%S') if r.event_timestamp else '-' }}
+                        </td>
+                        <td class="font-monospace text-secondary" style="max-width: 110px;">
+                            <span class="d-inline-block text-truncate w-100" title="{{ r.previous_hash }}">
+                                <code>{{ r.previous_hash[:10] }}...</code>
+                            </span>
+                        </td>
+                        <td class="font-monospace text-primary fw-semibold" style="max-width: 110px;">
+                            <span class="d-inline-block text-truncate w-100" title="{{ r.record_hash }}">
+                                <code>{{ r.record_hash[:10] }}...</code>
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            No ledger records found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — TraceLedger{% endblock %}
+
+{% block unauth_content %}
+<div class="login-container d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="card login-card shadow-lg border-0">
+        <div class="card-header bg-navy text-white text-center py-4 border-0">
+            <div class="brand-shield-icon mb-2">
+                <i class="bi bi-shield-lock-fill fs-1 text-primary-light"></i>
+            </div>
+            <h4 class="fw-bold tracking-tight mb-1 text-white">TRACELEDGER</h4>
+            <p class="text-white-50 text-xs mb-0">Tamper-Resistant Sample Lifecycle & Audit System</p>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <div class="login-intro mb-4 text-center">
+                <h6 class="fw-semibold text-dark mb-1">Access Control Portal</h6>
+                <p class="text-muted text-xs">PostgreSQL-authenticated Role-Based Access Control</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label text-xs fw-semibold text-uppercase text-secondary">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" id="username" name="username" placeholder="e.g. admin or tech_sarah" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label text-xs fw-semibold text-uppercase text-secondary">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+                        <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="••••••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Authenticate Session
+                </button>
+            </form>
+
+            <div class="demo-credentials-box mt-4 p-3 bg-light rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-xs fw-bold text-dark text-uppercase"><i class="bi bi-info-circle me-1"></i> Demo Credentials</span>
+                    <span class="badge bg-secondary text-xs">Default Password: TraceLedger2026!</span>
+                </div>
+                <div class="role-quick-fill-grid d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-outline-secondary btn-xs quick-fill-btn" data-user="admin">Admin</button>
+                    <button type="button" class="btn btn-outline-secondary btn-xs quick-fill-btn" data-user="tech_sarah">Field Tech</button>
+                    <button type="button" class="btn btn-outline-secondary btn-xs quick-fill-btn" data-user="analyst_raj">Lab Analyst</button>
+                    <button type="button" class="btn btn-outline-secondary btn-xs quick-fill-btn" data-user="courier_dave">Transporter</button>
+                    <button type="button" class="btn btn-outline-secondary btn-xs quick-fill-btn" data-user="auditor_elena">Auditor</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light text-center py-3 border-top">
+            <span class="text-xs text-muted">Tamper-Resistant Sample Lifecycle Tracking & Audit System</span>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.quick-fill-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('username').value = this.dataset.user;
+        document.getElementById('password').value = 'TraceLedger2026!';
+    });
+});
+</script>
+{% endblock %}

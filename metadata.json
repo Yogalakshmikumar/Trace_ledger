@@ -1,0 +1,6 @@
+{
+  "name": "TraceLedger – Tamper-Resistant Sample Lifecycle Tracking and Audit System",
+  "description": "Enterprise-grade sample lifecycle tracking and tamper-resistant audit ledger enforcing database-level immutability, cryptographic SHA-256 hash chaining, and atomic state transitions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

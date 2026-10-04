@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Move Specimen — TraceLedger{% endblock %}
+{% block page_heading %}Record Specimen Movement{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Chain of Custody Transition</h4>
+            <p class="text-muted text-xs mb-0">Appends a new hash-linked block to the specimen's tamper-resistant audit ledger</p>
+        </div>
+        <a href="{{ url_for('samples') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Registry
+        </a>
+    </div>
+
+    <div class="card border rounded shadow-sm">
+        <div class="card-header bg-navy text-white py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-left-right text-primary-light"></i>
+                <h6 class="mb-0 fw-semibold text-white">Record Physical Transfer / Lifecycle Transition</h6>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('move_sample') }}" id="movementForm">
+                <div class="row g-3">
+                    <!-- Sample Selection -->
+                    <div class="col-md-6">
+                        <label for="sample_code" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Select Specimen <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select font-monospace" id="sample_code" name="sample_code" required>
+                            <option value="">-- Choose Specimen --</option>
+                            {% for s in samples %}
+                            <option value="{{ s.sample_code }}"
+                                    data-status="{{ s.current_status }}"
+                                    data-node="{{ s.current_node_id }}"
+                                    {% if preselected == s.sample_code %}selected{% endif %}>
+                                {{ s.sample_code }} ({{ s.current_status }}) — {{ s.sample_type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Current Status Display -->
+                    <div class="col-md-6">
+                        <label class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Current Status
+                        </label>
+                        <div class="p-2 border rounded bg-light d-flex align-items-center justify-content-between">
+                            <span id="currentStatusBadge" class="badge bg-secondary font-monospace">None Selected</span>
+                            <span class="text-xs text-muted" id="statusTransitionHelp">Select a sample to inspect valid transitions</span>
+                        </div>
+                    </div>
+
+                    <!-- New Status -->
+                    <div class="col-md-6">
+                        <label for="new_status" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            New Target Status <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="new_status" name="new_status" required>
+                            <option value="">-- Select Valid Next Status --</option>
+                        </select>
+                        <div class="form-text text-xs" id="transitionNote">
+                            Only valid forward transitions are unlocked per the DBMS state machine.
+                        </div>
+                    </div>
+
+                    <!-- Destination Node -->
+                    <div class="col-md-6">
+                        <label for="to_node_id" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Destination Checkpoint Node <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="to_node_id" name="to_node_id" required>
+                            <option value="">-- Select Destination Facility --</option>
+                            {% for n in nodes %}
+                            <option value="{{ n.node_id }}">
+                                {{ n.node_code }} — {{ n.node_name }} ({{ n.location }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="col-12">
+                        <label for="remarks" class="form-label text-xs fw-bold text-uppercase text-secondary">
+                            Custody Remarks / Handover Notes <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="e.g. Courier Dave handed over sample to Lab Analyst Raj at Central Intake; cold pack intact at 3.9°C" required></textarea>
+                    </div>
+                </div>
+
+                <!-- Lifecycle Diagram Box -->
+                <div class="lifecycle-visual-box mt-4 p-3 bg-light rounded border">
+                    <span class="text-xs fw-bold text-uppercase text-secondary d-block mb-2">Enforced Lifecycle Rules:</span>
+                    <div class="d-flex flex-wrap align-items-center gap-1 text-xs font-monospace">
+                        <span class="px-2 py-1 bg-white border rounded">REGISTERED</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded">COLLECTED</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded">IN_TRANSIT</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded">RECEIVED</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded">UNDER_TESTING</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded">TEST_COMPLETED</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded">STORED</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="px-2 py-1 bg-white border rounded text-danger">DISPOSED</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                    <a href="{{ url_for('samples') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4" id="submitBtn">
+                        <i class="bi bi-link-45deg me-1"></i> Commit Movement & Generate Ledger Block
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const transitionsMap = {{ transitions|tojson }};
+
+function updateTransitionOptions() {
+    const sampleSelect = document.getElementById('sample_code');
+    const statusSelect = document.getElementById('new_status');
+    const badge = document.getElementById('currentStatusBadge');
+    const note = document.getElementById('transitionNote');
+    const selectedOption = sampleSelect.options[sampleSelect.selectedIndex];
+
+    statusSelect.innerHTML = '<option value="">-- Select Valid Next Status --</option>';
+
+    if (!selectedOption || !selectedOption.value) {
+        badge.textContent = 'None Selected';
+        badge.className = 'badge bg-secondary font-monospace';
+        return;
+    }
+
+    const currentStatus = selectedOption.dataset.status;
+    badge.textContent = currentStatus;
+    badge.className = `badge status-badge status-${currentStatus.toLowerCase()} font-monospace`;
+
+    const allowed = transitionsMap[currentStatus] || [];
+    if (allowed.length === 0) {
+        statusSelect.innerHTML = '<option value="">-- Terminal State (No Transitions Allowed) --</option>';
+        note.textContent = 'This sample has reached terminal status DISPOSED and cannot be transitioned further.';
+        document.getElementById('submitBtn').disabled = true;
+    } else {
+        document.getElementById('submitBtn').disabled = false;
+        allowed.forEach(st => {
+            const opt = document.createElement('option');
+            opt.value = st;
+            opt.textContent = st;
+            statusSelect.appendChild(opt);
+        });
+        note.textContent = `Allowed from ${currentStatus}: ${allowed.join(', ')}`;
+    }
+}
+
+document.getElementById('sample_code').addEventListener('change', updateTransitionOptions);
+// Trigger on page load if preselected
+updateTransitionOptions();
+</script>
+{% endblock %}

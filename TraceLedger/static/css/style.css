@@ -1,0 +1,402 @@
+/* =============================================================================
+   TRACELEDGER – Tamper-Resistant Sample Lifecycle Tracking and Audit System
+   style.css: Modern Enterprise CSS Stylesheet
+   ============================================================================= */
+
+:root {
+    --navy-primary: #0F172A;
+    --navy-secondary: #1E293B;
+    --navy-accent: #2563EB;
+    --navy-border: #334155;
+    --canvas-bg: #F8FAFC;
+    --card-bg: #FFFFFF;
+    --border-light: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-muted: #64748B;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+}
+
+body.app-body {
+    background-color: var(--canvas-bg);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Tabular Numerals & Monospace */
+.font-monospace, code, .tabular-nums {
+    font-family: var(--font-mono) !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.text-xxs {
+    font-size: 0.70rem;
+}
+
+.text-xs {
+    font-size: 0.8125rem;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.bg-navy {
+    background-color: var(--navy-primary) !important;
+}
+
+.text-primary-light {
+    color: #60A5FA !important;
+}
+
+.btn-xs {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+/* Sidebar Wrapper */
+.sidebar-wrapper {
+    width: 260px;
+    min-height: 100vh;
+    background-color: var(--navy-primary);
+    color: #F8FAFC;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.sidebar-heading {
+    padding: 1.25rem 1.5rem;
+}
+
+.brand-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: #FFFFFF;
+}
+
+.brand-icon-box {
+    width: 38px;
+    height: 38px;
+    background-color: var(--navy-accent);
+    color: #FFFFFF;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.brand-title {
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    font-size: 1.05rem;
+    display: block;
+}
+
+.brand-subtitle {
+    font-size: 0.65rem;
+    color: #94A3B8;
+    letter-spacing: 0.08em;
+    display: block;
+}
+
+.sidebar-user-card {
+    padding: 1rem 1.5rem;
+    margin: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #3B82F6;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-size: 0.825rem;
+    font-weight: 600;
+    display: block;
+}
+
+.sidebar-nav {
+    padding: 1rem 0;
+    flex-grow: 1;
+}
+
+.nav-section-title {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748B;
+    padding: 0.5rem 1.5rem 0.25rem;
+    font-weight: 700;
+}
+
+.nav-item-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.5rem;
+    color: #94A3B8;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+}
+
+.nav-item-link:hover {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item-link.active {
+    color: #FFFFFF;
+    background-color: var(--navy-accent);
+    font-weight: 600;
+}
+
+.nav-item-link i {
+    font-size: 1.05rem;
+}
+
+.sidebar-footer {
+    padding: 1rem 1.5rem;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.logout-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94A3B8;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.logout-link:hover {
+    color: #EF4444;
+}
+
+/* Top Navbar */
+.top-navbar {
+    background-color: #FFFFFF;
+    height: 56px;
+    display: flex;
+    align-items: center;
+}
+
+.header-breadcrumbs {
+    font-size: 0.85rem;
+}
+
+.status-pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #10B981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* Status Badges */
+.status-badge {
+    font-size: 0.725rem;
+    font-weight: 600;
+    padding: 0.25rem 0.55rem;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+}
+
+.status-registered {
+    background-color: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+}
+
+.status-collected {
+    background-color: #EFF6FF;
+    color: #1D4ED8;
+    border: 1px solid #BFDBFE;
+}
+
+.status-in_transit {
+    background-color: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+
+.status-received {
+    background-color: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+}
+
+.status-under_testing {
+    background-color: #F0F9FF;
+    color: #0369A1;
+    border: 1px solid #BAE6FD;
+}
+
+.status-test_completed {
+    background-color: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid #C7D2FE;
+}
+
+.status-stored {
+    background-color: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+}
+
+.status-disposed {
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+}
+
+/* User Role Badges */
+.user-role-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+}
+
+.role-admin {
+    background-color: #7C3AED;
+    color: #FFFFFF;
+}
+
+.role-field_technician {
+    background-color: #0284C7;
+    color: #FFFFFF;
+}
+
+.role-lab_analyst {
+    background-color: #059669;
+    color: #FFFFFF;
+}
+
+.role-transporter {
+    background-color: #D97706;
+    color: #FFFFFF;
+}
+
+.role-auditor {
+    background-color: #4B5563;
+    color: #FFFFFF;
+}
+
+/* Login Page Styles */
+.login-container {
+    background: radial-gradient(circle at top right, #1E293B, #0F172A);
+    min-height: 100vh;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Visual Lifecycle Steps Component */
+.lifecycle-steps-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.lifecycle-step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.step-completed {
+    background-color: #10B981;
+    color: #FFFFFF;
+}
+
+.step-current {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.step-future {
+    background-color: #E2E8F0;
+    color: #64748B;
+}
+
+.step-connector {
+    height: 2px;
+    background-color: #E2E8F0;
+    margin: 0 0.25rem 1rem;
+    position: relative;
+    top: -6px;
+    z-index: 1;
+}
+
+.connector-active {
+    background-color: #10B981;
+}
+
+/* Timeline Cards */
+.timeline-block-card {
+    border-left: 4px solid var(--navy-accent) !important;
+    transition: transform 0.15s ease-in-out;
+}
+
+.timeline-block-card:hover {
+    transform: translateX(2px);
+}
+
+/* Mobile responsive collapse */
+@media (max-width: 768px) {
+    .sidebar-wrapper {
+        position: fixed;
+        left: -260px;
+        transition: left 0.2s ease-in-out;
+    }
+
+    .sidebar-wrapper.show {
+        left: 0;
+    }
+}
